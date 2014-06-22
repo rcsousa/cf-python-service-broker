@@ -1,0 +1,30 @@
+# coding: utf8
+# try something like
+def index(): return dict(message="hello from v2.py")
+
+auth.settings.allow_basic_login = True
+@auth.requires_login()
+def catalog():
+    from gluon.tools import Auth
+    import yaml
+    import json
+    with open('/var/www/web2py/applications/fb_service_broker/static/config/settings.yml', 'r') as f:
+        yaml_settings = yaml.load(f)
+    json_settings = json.dumps(yaml_settings)
+    data = json.loads(json_settings)
+    return data['catalog']
+
+def service_instances():
+    import uuid, mysql.connector
+    id = request.args
+    conn = mysql.connector.connect(user='root', host='localhost', database='mysql', password='Passw0rd')
+    cursor = conn.cursor()
+    create_db_stmt = "create database db_"+str(hash(id[0][0-10]))+";"
+    create_user_stmt = "grant usage on *.* to user_"+str(hash(id[0][0-10]))+"@'%' identified by 'passwd_"+str(hash(id[0][0-10]))+"';"
+    priv_user_stmt = "grant all privileges on db_"+str(hash(id[0][0-10]))+".* to user_"+str(hash(id[0][0-10]))+"@localhost ;"
+    cursor.execute(create_db_stmt)
+    cursor.execute(create_user_stmt)
+    cursor.execute(priv_user_stmt)
+    url = "mysql://user_"+str(hash(id[0][0-10]))+":passwd_"+str(hash(id[0][0-10]))+'%40www.rcsousa.com.br/db_'+str(hash(id[0][0-10]))
+    response = { "dashboard_url": url }
+    return response
